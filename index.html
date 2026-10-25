@@ -112,10 +112,12 @@ const PUZZLE = {
   }
 };
 // -----------------------------------------------
-// ---- Analytics (Umami). Paste your Website ID between the quotes to switch it on ----
-const UMAMI_WEBSITE_ID = "";
-if(UMAMI_WEBSITE_ID){const sc=document.createElement('script');sc.defer=true;sc.src='https://cloud.umami.is/script.js';sc.dataset.websiteId=UMAMI_WEBSITE_ID;document.head.appendChild(sc);}
-const T=(n,d)=>{try{window.umami&&window.umami.track(n,d);}catch(e){}};
+// ---- Analytics (GoatCounter: https://pawsandpencils.goatcounter.com) ----
+const GC_CODE = "pawsandpencils";
+if(GC_CODE && location.protocol.startsWith('http')){const sc=document.createElement('script');sc.async=true;sc.src='https://gc.zgo.at/count.js';sc.dataset.goatcounter='https://'+GC_CODE+'.goatcounter.com/count';document.head.appendChild(sc);}
+const T=(n,d)=>{try{let p=n;if(d&&d.bucket)p+=' · '+d.bucket;
+  const go=()=>window.goatcounter&&window.goatcounter.count({path:p,title:'Paws & Pencils #'+PUZZLE.issue,event:true});
+  if(window.goatcounter&&window.goatcounter.count)go();else window.addEventListener('load',go,{once:true});}catch(e){}};
 // -------------------------------------------------------------------------------------
 const N=5, G=PUZZLE.grid;
 const isBlock=(r,c)=>G[r][c]==='#';
