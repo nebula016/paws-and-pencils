@@ -113,11 +113,18 @@ const PUZZLE = {
 };
 // -----------------------------------------------
 // ---- Analytics (GoatCounter: https://pawsandpencils.goatcounter.com) ----
+// Sends hits straight to GoatCounter (no third-party script, so tracker blocklists that block gc.zgo.at don't stop it).
 const GC_CODE = "pawsandpencils";
-if(GC_CODE && location.protocol.startsWith('http')){const sc=document.createElement('script');sc.async=true;sc.src='https://gc.zgo.at/count.js';sc.dataset.goatcounter='https://'+GC_CODE+'.goatcounter.com/count';document.head.appendChild(sc);}
-const T=(n,d)=>{try{let p=n;if(d&&d.bucket)p+=' · '+d.bucket;
-  const go=()=>window.goatcounter&&window.goatcounter.count({path:p,title:'Paws & Pencils #'+PUZZLE.issue,event:true});
-  if(window.goatcounter&&window.goatcounter.count)go();else window.addEventListener('load',go,{once:true});}catch(e){}};
+function gcHit(path,isEvent){try{
+  if(!GC_CODE||!location.protocol.startsWith('http'))return;
+  const q=new URLSearchParams({p:path,t:'Paws & Pencils #'+PUZZLE.issue,r:isEvent?'':document.referrer,s:String(screen.width),b:'0',q:location.search,rnd:Math.random().toString(36).slice(2,7)});
+  if(isEvent)q.set('e','true');
+  const u='https://'+GC_CODE+'.goatcounter.com/count?'+q.toString();
+  if(navigator.sendBeacon&&navigator.sendBeacon(u))return;
+  (new Image()).src=u;
+}catch(e){}}
+gcHit(location.pathname,false);
+const T=(n,d)=>gcHit(n+(d&&d.bucket?' · '+d.bucket:''),true);
 // -------------------------------------------------------------------------------------
 const N=5, G=PUZZLE.grid;
 const isBlock=(r,c)=>G[r][c]==='#';
