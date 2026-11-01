@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Paws &amp; Pencils</title>
-<meta name="description" content="A tiny dog-themed crossword. Six clues. How fast can you solve it?">
+<meta name="description" content="A tiny Sunday crossword. Six clues. How fast can you solve it?">
 <meta property="og:title" content="Paws &amp; Pencils">
-<meta property="og:description" content="A tiny dog-themed crossword. Six clues. How fast can you solve it?">
+<meta property="og:description" content="A tiny Sunday crossword. Six clues. How fast can you solve it?">
 <meta property="og:image" content="https://nebula016.github.io/paws-and-pencils/poster.png">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#f7f1e3">
@@ -63,6 +63,12 @@ header{width:100%;display:flex;align-items:center;justify-content:space-between;
 .card .btns{display:flex;flex-direction:column;gap:10px;margin-top:14px}
 .card button,.card a.btn{height:50px;border-radius:6px;border:3px solid var(--ink);background:var(--accent);box-shadow:var(--hard);color:var(--ink);font:18px AB;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none}
 .card a.btn.alt,.card button.alt{background:#fff}
+.card ul{list-style:none;margin:10px 0 0;padding:0;text-align:left;display:flex;flex-direction:column;gap:8px}
+.card li a{display:flex;align-items:center;gap:10px;padding:10px 12px;border:3px solid var(--ink);border-radius:6px;background:#fff;color:var(--ink);text-decoration:none;font:18px/1.2 AB;box-shadow:var(--hard)}
+.card li a.cur{background:var(--hl)}
+.card li a b{font:inherit;flex:1}
+.card li a b small{display:block;font:700 16px SG;color:var(--muted);margin-top:2px}
+.card li a i{font-style:normal;font:700 16px SG;white-space:nowrap}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .shake{animation:shake .35s}
 @media (prefers-reduced-motion:reduce){.shake{animation:none}}
@@ -72,7 +78,7 @@ header{width:100%;display:flex;align-items:center;justify-content:space-between;
 <body>
 <div class="app">
   <header>
-    <div class="brand"><b><svg width="44" height="18" viewBox="0 0 100 40" aria-hidden="true"><rect x="2" y="6" width="58" height="28" fill="#f2c335" stroke="#111" stroke-width="5"/><rect x="46" y="4" width="8" height="32" fill="#111"/><path d="M62 6 L94 20 L62 34 Z" fill="#f7f1e3" stroke="#111" stroke-width="5" stroke-linejoin="round"/><rect x="86" y="15" width="10" height="10" fill="#111"/></svg><span style="margin:0;display:inline;font:inherit;color:inherit">Paws &amp;</span><span class="hi" style="margin:0;display:inline;font:inherit;color:inherit">Pencils</span></b><span id="sub">Issue 1 · 25 Oct 2026</span></div>
+    <div class="brand"><b><svg width="44" height="18" viewBox="0 0 100 40" aria-hidden="true"><rect x="2" y="6" width="58" height="28" fill="#f2c335" stroke="#111" stroke-width="5"/><rect x="46" y="4" width="8" height="32" fill="#111"/><path d="M62 6 L94 20 L62 34 Z" fill="#f7f1e3" stroke="#111" stroke-width="5" stroke-linejoin="round"/><rect x="86" y="15" width="10" height="10" fill="#111"/></svg><span style="margin:0;display:inline;font:inherit;color:inherit">Paws &amp;</span><span class="hi" style="margin:0;display:inline;font:inherit;color:inherit">Pencils</span></b><span id="sub"></span></div>
     <div class="timer" id="timer" aria-live="off">0:00</div>
   </header>
   <div class="board-wrap"><div id="board" role="grid" aria-label="Crossword grid"></div></div>
@@ -81,7 +87,7 @@ header{width:100%;display:flex;align-items:center;justify-content:space-between;
     <p id="clueText"></p>
     <button id="next" aria-label="Next clue">›</button>
   </div>
-    <div class="tools"><button id="check">Check</button><button id="clear">Clear</button></div>
+    <div class="tools"><button id="check">Check</button><button id="clear">Clear</button><button id="arch">Archive</button></div>
   <div class="kb" id="kb"></div>
 </div>
 
@@ -92,6 +98,7 @@ header{width:100%;display:flex;align-items:center;justify-content:space-between;
     <p>Can your friends beat that?</p>
     <div class="btns">
       <button id="share">Share my time</button>
+      <button class="alt" id="more">Play past puzzles</button>
       <a class="btn alt" id="follow" href="https://www.instagram.com/ceo.hannibal/" target="_blank" rel="noopener">Follow @ceo.hannibal for more</a>
       <button class="alt" id="close">Close</button>
     </div>
@@ -99,18 +106,40 @@ header{width:100%;display:flex;align-items:center;justify-content:space-between;
   </div>
 </div>
 
+<div class="modal" id="archive" role="dialog" aria-modal="true" aria-labelledby="archTitle">
+  <div class="card">
+    <h2 id="archTitle" style="font-size:34px">All puzzles</h2>
+    <p style="font-size:16px;color:var(--muted)">A new one every Sunday.</p>
+    <ul id="archList"></ul>
+    <div class="btns"><button class="alt" id="archClose">Close</button></div>
+  </div>
+</div>
+
 <script>
 // ---- Puzzle data: edit this block each week ----
-const PUZZLE = {
-  title: "Paws & Pencils",
-  issue: 1,
-  date: "25 Oct 2026",
-  grid: ["BOWLS","E#R#H","AKITA","N#T#R","SLEEP"],
-  clues: {
-    A: {1:"Where kibble goes", 4:"Hachiko's breed", 5:"What dogs do most of the day"},
-    D: {1:"Baked ___ on toast", 2:"What a pencil does", 3:"Like a CEO's suit or a fresh pencil tip"}
+// Add each new issue to the END of this list. The newest issue loads by default; ?issue=N loads an older one.
+const PUZZLES = [
+  {
+    issue: 1, date: "25 Oct 2026", theme: "Dog days",
+    grid: ["BOWLS","E#R#H","AKITA","N#T#R","SLEEP"],
+    clues: {
+      A: {1:"Where kibble goes", 4:"Hachiko's breed", 5:"What dogs do most of the day"},
+      D: {1:"Baked ___ on toast", 2:"What a pencil does", 3:"Like a CEO's suit or a fresh pencil tip"}
+    }
+  },
+  {
+    issue: 2, date: "1 Nov 2026", theme: "Ask a millennial",
+    grid: ["CASIO","H#H#A","IPODS","L#E#I","DISKS"],
+    clues: {
+      A: {1:"Calculator-watch brand", 4:"Click-wheel music players", 5:"Floppy ___ (the CEO wore one this week)"},
+      D: {1:"Destiny's ___", 2:"Heelys were ___ with wheels", 3:"\"Wonderwall\" band"}
+    }
   }
-};
+];
+const LATEST = PUZZLES[PUZZLES.length-1];
+const WANT = parseInt(new URLSearchParams(location.search).get('issue'),10);
+const PUZZLE = PUZZLES.find(p=>p.issue===WANT) || LATEST;
+const issueUrl = n => location.origin + location.pathname + (n===LATEST.issue ? '' : '?issue='+n);
 // -----------------------------------------------
 // ---- Analytics (GoatCounter: https://pawsandpencils.goatcounter.com) ----
 // Sends hits straight to GoatCounter (no third-party script, so tracker blocklists that block gc.zgo.at don't stop it).
@@ -124,11 +153,11 @@ function gcHit(path,isEvent){try{
   (new Image()).src=u;
 }catch(e){}}
 gcHit(location.pathname,false);
-const T=(n,d)=>gcHit(n+(d&&d.bucket?' · '+d.bucket:''),true);
+const T=(n,d)=>gcHit(n+' · #'+PUZZLE.issue+(d&&d.bucket?' · '+d.bucket:''),true);
 // -------------------------------------------------------------------------------------
 const N=5, G=PUZZLE.grid;
 const isBlock=(r,c)=>G[r][c]==='#';
-const SHARE_URL = location.origin + location.pathname;
+const SHARE_URL = location.origin + location.pathname + '?issue=' + PUZZLE.issue;
 
 // numbering + entries
 const num={}; const entries=[]; let k=0;
@@ -152,7 +181,7 @@ try{
   const s=JSON.parse(localStorage.getItem('pnp-'+PUZZLE.date)||'null');
   if(s&&s.L){state.L=s.L;state.elapsed=s.elapsed||0;state.done=!!s.done;}
 }catch(e){}
-const defSub=()=>'Issue '+PUZZLE.issue+' · '+PUZZLE.date;
+const defSub=()=>'Issue '+PUZZLE.issue+' · '+PUZZLE.theme;
 function setMsg(t){$('sub').textContent=t||defSub();}
 function save(){try{localStorage.setItem('pnp-'+PUZZLE.date,JSON.stringify({L:state.L,elapsed:elapsedNow(),done:state.done}));}catch(e){}}
 
@@ -245,8 +274,23 @@ function showWin(){T('puzzle_solved',{issue:PUZZLE.issue,seconds:Math.round(stat
 }
 $('follow').onclick=()=>T('follow_clicked');
 $('close').onclick=()=>$('win').classList.remove('show');
+function readSave(p){try{return JSON.parse(localStorage.getItem('pnp-'+p.date)||'null');}catch(e){return null;}}
+function openArchive(){T('archive_opened');
+  const ul=$('archList');ul.innerHTML='';
+  PUZZLES.slice().reverse().forEach(p=>{
+    const sv=readSave(p);
+    const status=sv&&sv.done?'✓ '+fmt(sv.elapsed||0):(sv&&sv.L&&sv.L.some(r=>r.some(Boolean))?'In progress':'Play');
+    const li=document.createElement('li');const a=document.createElement('a');
+    a.href=issueUrl(p.issue);if(p===PUZZLE)a.className='cur';
+    a.innerHTML='<b>#'+p.issue+' · '+p.theme+'<small>'+p.date+(p===LATEST?' · this week':'')+'</small></b><i>'+status+'</i>';
+    li.appendChild(a);ul.appendChild(li);
+  });
+  $('win').classList.remove('show');$('archive').classList.add('show');$('archClose').focus();
+}
+$('arch').onclick=openArchive;$('more').onclick=openArchive;
+$('archClose').onclick=()=>$('archive').classList.remove('show');
 $('share').onclick=async()=>{T('share_clicked');
-  const text='I solved Paws & Pencils in '+fmt(state.elapsed)+'. Can you beat that?\n'+SHARE_URL;
+  const text='I solved Paws & Pencils #'+PUZZLE.issue+' in '+fmt(state.elapsed)+'. Can you beat that?\n'+SHARE_URL;
   try{
     if(navigator.share){await navigator.share({text});return;}
     await navigator.clipboard.writeText(text);$('shareMsg').textContent='Copied. Paste it in your story or chat.';
@@ -278,7 +322,7 @@ rows.forEach((s,i)=>{
 // physical keyboard
 document.addEventListener('keydown',ev=>{
   if(ev.metaKey||ev.ctrlKey||ev.altKey)return;
-  if($('win').classList.contains('show')){if(ev.key==='Escape')$('win').classList.remove('show');return;}
+  for(const m of ['win','archive']){if($(m).classList.contains('show')){if(ev.key==='Escape')$(m).classList.remove('show');return;}}
   const k=ev.key;
   if(/^[a-zA-Z]$/.test(k)){ev.preventDefault();typeLetter(k.toUpperCase());}
   else if(k==='Backspace'){ev.preventDefault();back();}
