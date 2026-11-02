@@ -69,6 +69,9 @@ header{width:100%;display:flex;align-items:center;justify-content:space-between;
 .card li a b{font:inherit;flex:1}
 .card li a b small{display:block;font:700 16px SG;color:var(--muted);margin-top:2px}
 .card li a i{font-style:normal;font:700 16px SG;white-space:nowrap}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.14) rotate(-2deg)}100%{transform:scale(1)}}
+.cell.pop{animation:pop .4s ease-out both}
+@media (prefers-reduced-motion:reduce){.cell.pop{animation:none}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .shake{animation:shake .35s}
 @media (prefers-reduced-motion:reduce){.shake{animation:none}}
@@ -298,9 +301,20 @@ $('share').onclick=async()=>{T('share_clicked');
 };
 $('check').onclick=()=>{T('check_used');
   const bad=wrongCells();state.flags={};
+  // Completed words that are fully right go green; wrong letters go red.
+  const right=entries.filter(e=>e.cells.every(([y,x])=>state.L[y][x]&&state.L[y][x]===G[y][x]));
+  right.forEach(e=>e.cells.forEach(([y,x])=>state.flags[y+','+x]='ok'));
   bad.forEach(([r,c])=>state.flags[r+','+c]='bad');
-  setMsg(bad.length?bad.length+' letter'+(bad.length>1?'s':'')+' off.':(allFilled()?'':'So far so good.'));
+  const parts=[];
+  if(right.length)parts.push(right.length+' word'+(right.length>1?'s':'')+' right');
+  if(bad.length)parts.push(bad.length+' letter'+(bad.length>1?'s':'')+' off');
+  setMsg(parts.length?parts.join(' · ')+'.':'Finish a word, then check it.');
   render();
+  // ripple each correct word, letter by letter
+  right.forEach(e=>e.cells.forEach(([y,x],i)=>{
+    const el=cellEls[y][x];el.classList.remove('pop');void el.offsetWidth;
+    el.style.animationDelay=(i*60)+'ms';el.classList.add('pop');
+  }));
 };
 $('clear').onclick=()=>{
   if(state.done)return;
